@@ -5,18 +5,23 @@
 
 #include <QTcpSocket>
 #include <QPointer>
+#include <QIODevice>
 
 class Socks5ConnectedState : public SocksState
 {
     Q_OBJECT
 public:
-    explicit Socks5ConnectedState(QTcpSocket * remoteSocket, SocksConnection *parent = 0);
+    explicit Socks5ConnectedState(QIODevice * remoteSocket, SocksConnection *parent = 0);
 
     //pure-virtual from SocksState
     virtual void handleIncomingBytes(QByteArray& bytes);
 
     //virtual from SocksState
     virtual void handleSetAsNewState();
+
+private:
+    QPointer<QIODevice> _socket;
+    bool _shutdown;
     
 signals:
     
@@ -25,9 +30,6 @@ public slots:
 private slots:
     void handleRemoteReadyRead();
     void handleRemoteDisconnect();
-
-private:
-    QPointer<QTcpSocket> _socket;
     
 };
 

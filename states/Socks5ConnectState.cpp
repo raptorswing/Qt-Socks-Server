@@ -2,6 +2,7 @@
 
 #include "protocol/Socks5ReplyMessage.h"
 #include "Socks5ConnectedState.h"
+#include "decorators/ThrottlingDecorator.h"
 
 Socks5ConnectState::Socks5ConnectState(QSharedPointer<Socks5RequestMessage> request, SocksConnection *parent) :
     SocksState(parent), _request(request), _socket(0)
@@ -64,7 +65,8 @@ void Socks5ConnectState::handleSocketConnected()
         return;
     }
 
-    Socks5ConnectedState * nState = new Socks5ConnectedState(_socket,_parent);
+    Socks5ConnectedState * nState = new Socks5ConnectedState(new ThrottlingDecorator(_socket),
+                                                             _parent);
     _socket->setParent(nState);
     _parent->setState(nState);
     return;

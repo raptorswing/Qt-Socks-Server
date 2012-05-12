@@ -3,14 +3,14 @@
 
 #include "SocksState.h"
 
-#include <QTcpSocket>
 #include <QPointer>
+#include <QIODevice>
 
 class Socks4ConnectedState : public SocksState
 {
     Q_OBJECT
 public:
-    explicit Socks4ConnectedState(QTcpSocket * socket, SocksConnection *parent = 0);
+    explicit Socks4ConnectedState(QIODevice * socket, SocksConnection *parent = 0);
 
     //pure-virtual from SocksState
     virtual void handleIncomingBytes(QByteArray &bytes);
@@ -27,7 +27,7 @@ private slots:
     void handleRemoteDisconnect();
 
 private:
-    QPointer<QTcpSocket> _socket;
+    QPointer<QIODevice> _socket;
     
 };
 

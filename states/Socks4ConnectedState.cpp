@@ -2,7 +2,7 @@
 
 #include <QtDebug>
 
-Socks4ConnectedState::Socks4ConnectedState(QTcpSocket *socket, SocksConnection *parent) :
+Socks4ConnectedState::Socks4ConnectedState(QIODevice *socket, SocksConnection *parent) :
     SocksState(parent), _socket(socket)
 {
     if (_socket.isNull())
@@ -15,7 +15,7 @@ Socks4ConnectedState::Socks4ConnectedState(QTcpSocket *socket, SocksConnection *
              this,
              SLOT(handleRemoteReadyRead()));
     connect(_socket.data(),
-             SIGNAL(disconnected()),
+             SIGNAL(aboutToClose()),
              this,
              SLOT(handleRemoteDisconnect()));
 }

@@ -38,6 +38,7 @@ QIODeviceDecorator::QIODeviceDecorator(QIODevice *toDecorate, QObject *parent) :
 
 QIODeviceDecorator::~QIODeviceDecorator()
 {
+    qDebug() << this << "deleting";
     if (_toDecorate.isNull())
         return;
     _toDecorate->close();
@@ -162,6 +163,7 @@ void QIODeviceDecorator::handleChildBytesWritten(qint64 bytesWritten)
 void QIODeviceDecorator::handleChildReadChannelFinished()
 {
     this->readChannelFinished();
+    this->handleChildAboutToClose();
 }
 
 //protected slot

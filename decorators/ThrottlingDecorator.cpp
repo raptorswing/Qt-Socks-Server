@@ -7,8 +7,8 @@ ThrottlingDecorator::ThrottlingDecorator(QIODevice * toDecorate, QObject *parent
 {
     _readBucket = 0;
     _writeBucket = 0;
-    _readBytesPerSecond = 1024 * 2;
-    _writeBytesPerSecond = 1024 * 2;
+    _readBytesPerSecond = 1024 * 5;
+    _writeBytesPerSecond = 1024 * 5;
 
     _bucketTimer = new QTimer(this);
     connect(_bucketTimer,
@@ -65,6 +65,8 @@ bool ThrottlingDecorator::waitForReadyRead(int msecs)
 //pure-virtual from QIODevice
 qint64 ThrottlingDecorator::readData(char *data, qint64 maxlen)
 {
+    if (_readBucket == 0)
+        return 0;
     qint64 actuallyRead = _toDecorate->read(data,qMin<qint64>(_readBucket,maxlen));
     _readBucket -= actuallyRead;
     return actuallyRead;
@@ -74,6 +76,9 @@ qint64 ThrottlingDecorator::readData(char *data, qint64 maxlen)
 //pure-virtual from QIODevice
 qint64 ThrottlingDecorator::readLineData(char *data, qint64 maxlen)
 {
+    if (_readBucket == 0)
+        return 0;
+
     QByteArray temp = _toDecorate->readLine(qMin<qint64>(_readBucket,maxlen));
     if (temp.isEmpty())
         return 0;

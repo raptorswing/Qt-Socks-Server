@@ -2,7 +2,7 @@
 
 #include <QPointer>
 
-Socks5ConnectedState::Socks5ConnectedState(QTcpSocket *remoteSocket, SocksConnection *parent) :
+Socks5ConnectedState::Socks5ConnectedState(QIODevice *remoteSocket, SocksConnection *parent) :
     SocksState(parent), _socket(remoteSocket)
 {
     if (_socket.isNull())
@@ -15,7 +15,7 @@ Socks5ConnectedState::Socks5ConnectedState(QTcpSocket *remoteSocket, SocksConnec
              this,
              SLOT(handleRemoteReadyRead()));
     connect(_socket.data(),
-             SIGNAL(disconnected()),
+             SIGNAL(aboutToClose()),
              this,
              SLOT(handleRemoteDisconnect()));
 }
@@ -57,6 +57,7 @@ void Socks5ConnectedState::handleRemoteReadyRead()
 //private slot
 void Socks5ConnectedState::handleRemoteDisconnect()
 {
+    qDebug() << this << "aboutToClose";
     //Close the client connection too
     _parent->close();
 }

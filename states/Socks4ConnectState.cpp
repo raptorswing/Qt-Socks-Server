@@ -3,6 +3,8 @@
 #include "protocol/Socks4ReplyMessage.h"
 #include "Socks4ConnectedState.h"
 
+#include "decorators/ThrottlingDecorator.h"
+
 Socks4ConnectState::Socks4ConnectState(QSharedPointer<Socks4RequestMessage> request, SocksConnection *parent) :
     SocksState(parent), _request(request)
 {
@@ -60,7 +62,8 @@ void Socks4ConnectState::handleSocketConnected()
         return;
     }
 
-    Socks4ConnectedState * nState = new Socks4ConnectedState(_socket,_parent);
+    Socks4ConnectedState * nState = new Socks4ConnectedState(new ThrottlingDecorator(_socket),
+                                                             _parent);
     _socket->setParent(nState);
     _parent->setState(nState);
     return;
