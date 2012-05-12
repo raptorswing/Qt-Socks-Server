@@ -32,7 +32,6 @@ protected:
     virtual qint64 readLineData(char *data, qint64 maxlen);
     virtual qint64 writeData(const char *data, qint64 len);
 
-private:
     QPointer<QIODevice> _toDecorate;
     
 signals:

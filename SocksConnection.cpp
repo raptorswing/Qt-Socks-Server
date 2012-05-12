@@ -5,6 +5,7 @@
 
 #include "states/InitialState.h"
 #include "decorators/QIODeviceDecorator.h"
+#include "decorators/ThrottlingDecorator.h"
 
 SocksConnection::SocksConnection(QAbstractSocket *socket,QObject *parent) :
     QObject(parent)
@@ -16,7 +17,7 @@ SocksConnection::SocksConnection(QAbstractSocket *socket,QObject *parent) :
         return;
     }
 
-    _socket = new QIODeviceDecorator(_rawSocket,this);
+    _socket = new ThrottlingDecorator(_rawSocket,this);
 
     //When we have incoming bytes, we read them
     connect(_socket.data(),
@@ -161,6 +162,12 @@ void SocksConnection::handleIncomingBytes(QByteArray &bytes)
     if (_connectionState.isNull())
     {
         qWarning() << this << "No state to do handleIncomingBytes";
+        return;
+    }
+
+    if (bytes.size() == 0)
+    {
+        qWarning() << this << "got empty array in handleIncomingBytes";
         return;
     }
 

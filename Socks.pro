@@ -34,7 +34,8 @@ SOURCES += main.cpp\
     states/Socks5UDPAssociateState.cpp \
     states/Socks5UDPAssociatedState.cpp \
     protocol/Socks5UDPRequestMessage.cpp \
-    decorators/QIODeviceDecorator.cpp
+    decorators/QIODeviceDecorator.cpp \
+    decorators/ThrottlingDecorator.cpp
 
 HEADERS  += MainWindow.h \
     SocksServer.h \
@@ -59,6 +60,7 @@ HEADERS  += MainWindow.h \
     states/Socks5UDPAssociateState.h \
     states/Socks5UDPAssociatedState.h \
     protocol/Socks5UDPRequestMessage.h \
-    decorators/QIODeviceDecorator.h
+    decorators/QIODeviceDecorator.h \
+    decorators/ThrottlingDecorator.h
 
 FORMS    += MainWindow.ui
