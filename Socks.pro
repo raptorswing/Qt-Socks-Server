@@ -33,7 +33,8 @@ SOURCES += main.cpp\
     states/Socks4ConnectedState.cpp \
     states/Socks5UDPAssociateState.cpp \
     states/Socks5UDPAssociatedState.cpp \
-    protocol/Socks5UDPRequestMessage.cpp
+    protocol/Socks5UDPRequestMessage.cpp \
+    decorators/QIODeviceDecorator.cpp
 
 HEADERS  += MainWindow.h \
     SocksServer.h \
@@ -57,6 +58,7 @@ HEADERS  += MainWindow.h \
     states/Socks4ConnectedState.h \
     states/Socks5UDPAssociateState.h \
     states/Socks5UDPAssociatedState.h \
-    protocol/Socks5UDPRequestMessage.h
+    protocol/Socks5UDPRequestMessage.h \
+    decorators/QIODeviceDecorator.h
 
 FORMS    += MainWindow.ui

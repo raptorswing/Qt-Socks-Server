@@ -4,17 +4,19 @@
 #include <QHostAddress>
 
 #include "states/InitialState.h"
+#include "decorators/QIODeviceDecorator.h"
 
 SocksConnection::SocksConnection(QAbstractSocket *socket,QObject *parent) :
     QObject(parent)
 {
-
-    _socket = socket;
-    if (_socket.isNull())
+    _rawSocket = socket;
+    if (_rawSocket.isNull())
     {
         qWarning() << this << "initialized with null socket";
         return;
     }
+
+    _socket = new QIODeviceDecorator(_rawSocket,this);
 
     //When we have incoming bytes, we read them
     connect(_socket.data(),
@@ -24,7 +26,7 @@ SocksConnection::SocksConnection(QAbstractSocket *socket,QObject *parent) :
 
     //When our socket closes, we die
     connect(_socket.data(),
-            SIGNAL(disconnected()),
+            SIGNAL(aboutToClose()),
             this,
             SLOT(handleSocketClosed()));
 
@@ -41,8 +43,16 @@ SocksConnection::~SocksConnection()
     if (!_socket.isNull())
     {
         _socket->close();
-        delete _socket;
+        _socket->deleteLater();
     }
+
+    /*
+    if (!_rawSocket.isNull())
+    {
+        _rawSocket->close();
+        _rawSocket->deleteLater();
+    }
+    */
 
     if (!_connectionState.isNull())
         delete _connectionState;
@@ -95,12 +105,12 @@ bool SocksConnection::sendMessage(QSharedPointer<SocksProtocolMessage> msg, QStr
 
 QHostAddress SocksConnection::myBoundAddress() const
 {
-    return _socket->localAddress();
+    return _rawSocket->localAddress();
 }
 
 QHostAddress SocksConnection::peerAddress() const
 {
-    return _socket->peerAddress();
+    return _rawSocket->peerAddress();
 }
 
 //public slot
@@ -142,7 +152,6 @@ void SocksConnection::close()
 {
     if (_socket.isNull())
         return;
-    _socket->flush();
     _socket->close();
 }
 

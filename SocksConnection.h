@@ -7,6 +7,7 @@
 #include <QTcpSocket>
 #include <QByteArray>
 #include <QSharedPointer>
+#include <QIODevice>
 
 #include "protocol/SocksProtocolMessage.h"
 
@@ -46,7 +47,8 @@ private slots:
 
 private:
     QPointer<SocksState> _connectionState;
-    QPointer<QAbstractSocket> _socket;
+    QPointer<QAbstractSocket> _rawSocket;
+    QPointer<QIODevice> _socket;
     QByteArray _recvBuffer;
 
     bool _socksVersionSet;
