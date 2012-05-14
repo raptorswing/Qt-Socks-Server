@@ -7,9 +7,8 @@ ThrottlingDecorator::ThrottlingDecorator(QAbstractSocket *toDecorate, QObject *p
 {
     _readBucket = 0;
     _writeBucket = 0;
-    _readBytesPerSecond = 1024 * 150;
-    _writeBytesPerSecond = 1024 * 150;
-    toDecorate->setReadBufferSize(_readBytesPerSecond*2);
+    this->setReadBytesPerSecond(1024*150);
+    this->setWriteBytesPerSecond(1024*150);
 
     //This timer is what makes the throttling work
     _bucketTimer = new QTimer(this);
@@ -23,7 +22,7 @@ ThrottlingDecorator::ThrottlingDecorator(QAbstractSocket *toDecorate, QObject *p
     _childIsFinished = false;
 
     /*
-     TODO: We need to keep a QAbstractSocket refernence (not just QIODevice) so we can adjust buffer
+     We need to keep a QAbstractSocket refernence (not just QIODevice) so we can adjust buffer
      sizes later.
     */
     _cheaterSocketReference = toDecorate;
@@ -42,7 +41,6 @@ bool ThrottlingDecorator::atEnd() const
 //virtual from QIODeviceDecorator
 qint64 ThrottlingDecorator::bytesAvailable() const
 {
-    //qint64 toRet = qMin<qint64>(_readBucket, _readQueue.size()) + QIODevice::bytesAvailable();
     qint64 toRet = _readQueue.size() + QIODevice::bytesAvailable();
     return toRet;
 }
@@ -76,6 +74,7 @@ bool ThrottlingDecorator::waitForReadyRead(int msecs)
 void ThrottlingDecorator::setReadBytesPerSecond(qint64 maxReadBytesPerSecond)
 {
     _readBytesPerSecond = maxReadBytesPerSecond;
+    _cheaterSocketReference->setReadBufferSize(maxReadBytesPerSecond * 2);
 }
 
 void ThrottlingDecorator::setWriteBytesPerSecond(qint64 maxWriteBytesPerSecond)
