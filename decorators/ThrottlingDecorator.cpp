@@ -7,21 +7,23 @@ ThrottlingDecorator::ThrottlingDecorator(QAbstractSocket *toDecorate, QObject *p
 {
     _readBucket = 0;
     _writeBucket = 0;
-    _readBytesPerSecond = 1024 * 50;
-    _writeBytesPerSecond = 1024 * 50;
+    _readBytesPerSecond = 1024 * 150;
+    _writeBytesPerSecond = 1024 * 150;
     toDecorate->setReadBufferSize(_readBytesPerSecond*2);
 
+    //This timer is what makes the throttling work
     _bucketTimer = new QTimer(this);
     connect(_bucketTimer,
             SIGNAL(timeout()),
             this,
             SLOT(handleBuckets()));
     _bucketTimer->start(50);
+    _lastBucketTime.start();
 
     _childIsFinished = false;
 
     /*
-     We need to keep a QAbstractSocket refernence (not just QIODevice) so we can adjust buffer
+     TODO: We need to keep a QAbstractSocket refernence (not just QIODevice) so we can adjust buffer
      sizes later.
     */
     _cheaterSocketReference = toDecorate;
@@ -71,6 +73,16 @@ bool ThrottlingDecorator::waitForReadyRead(int msecs)
     return false;
 }
 
+void ThrottlingDecorator::setReadBytesPerSecond(qint64 maxReadBytesPerSecond)
+{
+    _readBytesPerSecond = maxReadBytesPerSecond;
+}
+
+void ThrottlingDecorator::setWriteBytesPerSecond(qint64 maxWriteBytesPerSecond)
+{
+    _writeBytesPerSecond = maxWriteBytesPerSecond;
+}
+
 //protected
 //pure-virtual from QIODevice
 qint64 ThrottlingDecorator::readData(char *data, qint64 maxlen)
@@ -85,7 +97,6 @@ qint64 ThrottlingDecorator::readData(char *data, qint64 maxlen)
 
     for (int i = 0; i < actuallyRead; i++)
         data[i] = temp[i];
-
 
     return actuallyRead;
 }
@@ -146,19 +157,23 @@ void ThrottlingDecorator::handleChildReadyRead()
 //private slot
 void ThrottlingDecorator::handleBuckets()
 {
-    const qint32 ticksPerSecond = 1000 / _bucketTimer->interval();
-    const qint64 readPerTick = _readBytesPerSecond / ticksPerSecond;
-    const qint64 writePerTick = _writeBytesPerSecond / ticksPerSecond;
+    //Figure out how much time REALLY elapsed since the last tick
+    int msElapsed = _lastBucketTime.elapsed();
+    _lastBucketTime.restart();
 
-    _readBucket = qMin<qint64>(readPerTick,
-                               _readBucket + readPerTick);
-    _writeBucket = qMin<qint64>(readPerTick,
-                                _writeBucket + writePerTick);
+    //Based on how much time elapsed since last tick, figure out how many bytes to add to the buckets
+    qreal fractionOfSecond = msElapsed / 1000.0;
+    int toAddRead = fractionOfSecond * _readBytesPerSecond;
+    int toAddWrite = fractionOfSecond * _writeBytesPerSecond;
 
-    //If there are waiting bytes, notify the client that they are available now.
+    _readBucket = qMin<qint64>(toAddRead * 2,
+                               _readBucket + toAddRead);
+    _writeBucket = qMin<qint64>(toAddWrite * 2,
+                                _writeBucket + toAddWrite);
+
     if (_readQueue.size() > 0)
     {
-
+        //Nothing
     }
     else if (_toDecorate->bytesAvailable() <= 0 && _childIsFinished)
     {
@@ -168,6 +183,8 @@ void ThrottlingDecorator::handleBuckets()
 
     //Send as many bytes as we can from the write queue
     this->handleWriteQueue();
+
+    //Read as many bytes as we can into the read queue
     this->handleReadQueue();
 }
 

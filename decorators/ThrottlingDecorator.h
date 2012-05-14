@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QByteArray>
 #include <QTcpSocket>
+#include <QTime>
 
 class ThrottlingDecorator : public QIODeviceDecorator
 {
@@ -21,6 +22,9 @@ public:
     virtual bool canReadLine() const;
     virtual bool waitForBytesWritten(int msecs);
     virtual bool waitForReadyRead(int msecs);
+
+    void setReadBytesPerSecond(qint64 maxReadBytesPerSecond);
+    void setWriteBytesPerSecond(qint64 maxWriteBytesPerSecond);
 
 protected:
     //pure-virtual from QIODevice
@@ -47,6 +51,7 @@ private:
     QTimer * _bucketTimer;
     qint64 _readBucket;
     qint64 _writeBucket;
+    QTime _lastBucketTime;
 
     qint64 _readBytesPerSecond;
     qint64 _writeBytesPerSecond;
