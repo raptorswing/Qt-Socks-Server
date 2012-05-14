@@ -7,8 +7,8 @@ ThrottlingDecorator::ThrottlingDecorator(QIODevice * toDecorate, QObject *parent
 {
     _readBucket = 0;
     _writeBucket = 0;
-    _readBytesPerSecond = 1024 * 5;
-    _writeBytesPerSecond = 1024 * 5;
+    _readBytesPerSecond = 1024 * 250;
+    _writeBytesPerSecond = 1024 * 250;
 
     _bucketTimer = new QTimer(this);
     connect(_bucketTimer,
@@ -16,6 +16,8 @@ ThrottlingDecorator::ThrottlingDecorator(QIODevice * toDecorate, QObject *parent
             this,
             SLOT(handleBuckets()));
     _bucketTimer->start(50);
+
+    _childIsFinished = false;
 }
 
 ThrottlingDecorator::~ThrottlingDecorator()
@@ -31,7 +33,8 @@ bool ThrottlingDecorator::atEnd() const
 //virtual from QIODeviceDecorator
 qint64 ThrottlingDecorator::bytesAvailable() const
 {
-    return qMin<qint64>(_readBucket, _toDecorate->bytesAvailable());
+    qint64 toRet = qMin<qint64>(_readBucket, _readQueue.size()) + QIODevice::bytesAvailable();
+    return toRet;
 }
 
 //virtual from QIODeviceDecorator
@@ -43,8 +46,8 @@ qint64 ThrottlingDecorator::bytesToWrite() const
 //virtual from QIODeviceDecorator
 bool ThrottlingDecorator::canReadLine() const
 {
-    QByteArray peeked = _toDecorate->peek(_readBucket);
-    return peeked.contains('\n');
+    QByteArray allAvailableData = _readQueue.mid(0,_readBucket);
+    return allAvailableData.contains('\n') || QIODevice::canReadLine();
 }
 
 //virtual from QIODeviceDecorator
@@ -65,10 +68,24 @@ bool ThrottlingDecorator::waitForReadyRead(int msecs)
 //pure-virtual from QIODevice
 qint64 ThrottlingDecorator::readData(char *data, qint64 maxlen)
 {
-    if (_readBucket == 0)
+    if (this->bytesAvailable() == 0)
+    {
+        //qDebug() << "Client called readData, but no bytes available";
         return 0;
-    qint64 actuallyRead = _toDecorate->read(data,qMin<qint64>(_readBucket,maxlen));
+    }
+
+    qint64 actuallyRead = qMin<qint64>(qMin<qint64>(maxlen, _readBucket),
+                                       _readQueue.size());
     _readBucket -= actuallyRead;
+
+    QByteArray temp = _readQueue.mid(0,actuallyRead);
+    _readQueue.remove(0,actuallyRead);
+
+    for (int i = 0; i < actuallyRead; i++)
+        data[i] = temp[i];
+
+    //qDebug() << "Client read:" << temp.toHex();
+
     return actuallyRead;
 }
 
@@ -76,18 +93,17 @@ qint64 ThrottlingDecorator::readData(char *data, qint64 maxlen)
 //pure-virtual from QIODevice
 qint64 ThrottlingDecorator::readLineData(char *data, qint64 maxlen)
 {
-    if (_readBucket == 0)
+    if (!this->canReadLine())
+    {
+        qWarning() << this << "readLineData() called with" << maxlen<< ", but can't read any line data";
         return 0;
+    }
 
-    QByteArray temp = _toDecorate->readLine(qMin<qint64>(_readBucket,maxlen));
-    if (temp.isEmpty())
-        return 0;
+    int index = _readQueue.indexOf('\n');
+    QByteArray temp = _readQueue.mid(0,index + 1);
+    _readQueue.remove(0,index + 1);
 
-    //Remove trailing null-byte from readLine
-    temp.remove(temp.size()-1,1);
-
-    //Copy the data
-    for (int i = 0; i < temp.size(); i++)
+    for (int i = 0; i < index + 1; i++)
         data[i] = temp[i];
 
     _readBucket -= temp.size();
@@ -110,38 +126,46 @@ qint64 ThrottlingDecorator::writeData(const char *data, qint64 len)
 
 //protected slot
 //virtual from QIODeviceDecorator
+void ThrottlingDecorator::handleChildAboutToClose()
+{
+    _childIsFinished = true;
+}
+
+//protected slot
+//virtual from QIODeviceDecorator
 void ThrottlingDecorator::handleChildReadChannelFinished()
 {
-    //Start a smorgasborg of reading! If our child still has data to read
-    if (_toDecorate->bytesAvailable() > 0)
-    {
-        _readBucket += _toDecorate->bytesAvailable();
-        this->readyRead();
-    }
-
-    QIODeviceDecorator::handleChildReadChannelFinished();
+    _childIsFinished = true;
 }
 
 //protected slot
 //virtual from QIODeviceDecorator
 void ThrottlingDecorator::handleChildReadyRead()
 {
-    if (_readBucket > 0)
-        this->readyRead();
+    //Read it all into our read queue
+    _readQueue.append(_toDecorate->readAll());
 }
 
 //private slot
 void ThrottlingDecorator::handleBuckets()
 {
-    qint64 readPerTick = _readBytesPerSecond / (1000 / _bucketTimer->interval());
-    qint64 writePerTick = _writeBytesPerSecond / (1000 / _bucketTimer->interval());
+    const qint32 ticksPerSecond = 1000 / _bucketTimer->interval();
+    const qint64 readPerTick = _readBytesPerSecond / ticksPerSecond;
+    const qint64 writePerTick = _writeBytesPerSecond / ticksPerSecond;
 
-    _readBucket = qMin<qint64>(_readBytesPerSecond,_readBucket + readPerTick);
-    _writeBucket = qMin<qint64>(_writeBytesPerSecond,_writeBucket + writePerTick);
+    _readBucket = qMin<qint64>(readPerTick,
+                               _readBucket + readPerTick);
+    _writeBucket = qMin<qint64>(readPerTick,
+                                _writeBucket + writePerTick);
 
     //If there are waiting bytes, notify the client that they are available now.
-    if (_toDecorate->bytesAvailable() > 0)
+    if (this->bytesAvailable() > 0)
         this->readyRead();
+    else if (_childIsFinished)
+    {
+        this->aboutToClose();
+        this->close();
+    }
 
     //Send as many bytes as we can from the write queue
     this->handleWriteQueue();

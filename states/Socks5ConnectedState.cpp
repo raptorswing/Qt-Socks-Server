@@ -47,17 +47,21 @@ void Socks5ConnectedState::handleSetAsNewState()
 //private slot
 void Socks5ConnectedState::handleRemoteReadyRead()
 {
-    while (_socket->bytesAvailable())
+    int count = 0;
+    const int max = 50;
+    while (_socket->bytesAvailable() && ++count < max)
     {
         QByteArray bytes = _socket->readAll();
         _parent->sendData(bytes);
     }
+
+    if (count == max)
+        qDebug() << this << "looped too much";
 }
 
 //private slot
 void Socks5ConnectedState::handleRemoteDisconnect()
 {
-    qDebug() << this << "aboutToClose";
     //Close the client connection too
     _parent->close();
 }

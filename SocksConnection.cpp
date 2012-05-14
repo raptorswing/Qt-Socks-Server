@@ -47,14 +47,6 @@ SocksConnection::~SocksConnection()
         _socket->deleteLater();
     }
 
-    /*
-    if (!_rawSocket.isNull())
-    {
-        _rawSocket->close();
-        _rawSocket->deleteLater();
-    }
-    */
-
     if (!_connectionState.isNull())
         delete _connectionState;
 }
@@ -181,8 +173,12 @@ void SocksConnection::handleReadyRead()
     if (_socket.isNull())
         return;
 
-    while (_socket->bytesAvailable() > 0)
+    int count = 0;
+    const int max = 50;
+    while (_socket->bytesAvailable() > 0 && ++count < max)
         _recvBuffer.append(_socket->readAll());
+    if (count == max)
+        qDebug() << this << "looped too much";
 
     //Send the whole buffer to the state, which should eat the portions it wants
     this->handleIncomingBytes(_recvBuffer);

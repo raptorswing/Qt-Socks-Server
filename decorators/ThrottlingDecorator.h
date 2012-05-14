@@ -33,6 +33,7 @@ public slots:
 
 protected slots:
     //These are all virtual from QIODeviceDecorator
+    virtual void handleChildAboutToClose();
     virtual void handleChildReadChannelFinished();
     virtual void handleChildReadyRead();
 
@@ -49,6 +50,9 @@ private:
     qint64 _writeBytesPerSecond;
 
     QByteArray _writeQueue;
+    QByteArray _readQueue;
+
+    bool _childIsFinished;
     
 };
 

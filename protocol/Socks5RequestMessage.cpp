@@ -25,7 +25,8 @@ SocksProtocolMessage::ParseResult Socks5RequestMessage::parse(QByteArray &bytes,
     if (!SocksProtocolMessage::byte2SocksVersion(socksVersionByte,&socksVersion))
     {
         if (error)
-            *error = "Invalid socks version";
+            *error = "Invalid socks version in Socks5RequestMessage";
+        qDebug() << bytes.toHex();
         return Failure;
     }
 

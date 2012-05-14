@@ -49,11 +49,16 @@ void Socks4ConnectedState::handleSetAsNewState()
 //private slot
 void Socks4ConnectedState::handleRemoteReadyRead()
 {
-    while (_socket->bytesAvailable())
+    int count = 0;
+    const int max = 50;
+    while (_socket->bytesAvailable() && ++count < max)
     {
         QByteArray bytes = _socket->readAll();
         _parent->sendData(bytes);
     }
+
+    if (count == max)
+        qDebug() << this << "looped too much";
 }
 
 //private slot

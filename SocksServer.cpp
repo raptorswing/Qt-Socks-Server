@@ -53,11 +53,16 @@ bool SocksServer::isStarted() const
 //private slot
 void SocksServer::handleNewIncomingConnection()
 {
-    while (_serverSock->hasPendingConnections())
+    int count = 0;
+    const int max = 50;
+    while (_serverSock->hasPendingConnections() && ++count < max)
     {
         QTcpSocket * clientSock = _serverSock->nextPendingConnection();
         QPointer<SocksConnection> connection = new SocksConnection(clientSock,this);
         _connections.append(connection);
         //qDebug() << "Client" << clientSock->peerAddress().toString() << ":" << clientSock->peerPort() << "connected";
     }
+
+    if (count == max)
+        qDebug() << this << "looped too much";
 }

@@ -28,7 +28,7 @@ bool Socks5MethodSelectionMessage::toBytes(QByteArray * output, QString *error)
     if (!SocksProtocolMessage::socksVersion2Byte(SOCKS5,&socksVersion))
     {
         if (error)
-            *error = "Invalid socks version";
+            *error = "Invalid socks version Socks5MethodSelectionMessage";
         return false;
     }
 
