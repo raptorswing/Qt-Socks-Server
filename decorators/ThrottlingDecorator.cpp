@@ -5,6 +5,12 @@
 ThrottlingDecorator::ThrottlingDecorator(QAbstractSocket *toDecorate, QObject *parent) :
     QIODeviceDecorator(toDecorate, parent)
 {
+    /*
+     We need to keep a QAbstractSocket refernence (not just QIODevice) so we can adjust buffer
+     sizes later.
+    */
+    _cheaterSocketReference = toDecorate;
+
     _readBucket = 0;
     _writeBucket = 0;
     this->setReadBytesPerSecond(1024*150);
@@ -20,12 +26,6 @@ ThrottlingDecorator::ThrottlingDecorator(QAbstractSocket *toDecorate, QObject *p
     _lastBucketTime.start();
 
     _childIsFinished = false;
-
-    /*
-     We need to keep a QAbstractSocket refernence (not just QIODevice) so we can adjust buffer
-     sizes later.
-    */
-    _cheaterSocketReference = toDecorate;
 }
 
 ThrottlingDecorator::~ThrottlingDecorator()
@@ -159,6 +159,14 @@ void ThrottlingDecorator::handleBuckets()
     //Figure out how much time REALLY elapsed since the last tick
     int msElapsed = _lastBucketTime.elapsed();
     _lastBucketTime.restart();
+
+    /*
+      If the clock has jumped more than thirty seconds in either direction, we'll assume it's changed
+      either because the system was suspended or we entered/left DST or the clock was otherwise changed.
+      Come back next tick.
+    */
+    if (qAbs(msElapsed) > 30000)
+        return;
 
     //Based on how much time elapsed since last tick, figure out how many bytes to add to the buckets
     qreal fractionOfSecond = msElapsed / 1000.0;
