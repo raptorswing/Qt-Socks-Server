@@ -5,12 +5,13 @@
 
 #include <QTimer>
 #include <QByteArray>
+#include <QTcpSocket>
 
 class ThrottlingDecorator : public QIODeviceDecorator
 {
     Q_OBJECT
 public:
-    explicit ThrottlingDecorator(QIODevice * toDecorate, QObject *parent = 0);
+    explicit ThrottlingDecorator(QAbstractSocket * toDecorate, QObject *parent = 0);
     virtual ~ThrottlingDecorator();
 
     //These are all virtual from QIODeviceDecorator
@@ -40,6 +41,7 @@ protected slots:
 private slots:
     void handleBuckets();
     void handleWriteQueue();
+    void handleReadQueue();
 
 private:
     QTimer * _bucketTimer;
@@ -53,6 +55,7 @@ private:
     QByteArray _readQueue;
 
     bool _childIsFinished;
+    QAbstractSocket * _cheaterSocketReference;
     
 };
 
