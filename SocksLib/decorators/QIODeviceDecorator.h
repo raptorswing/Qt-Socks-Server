@@ -4,7 +4,9 @@
 #include <QIODevice>
 #include <QPointer>
 
-class QIODeviceDecorator : public QIODevice
+#include "SocksLib_global.h"
+
+class SOCKSLIBSHARED_EXPORT QIODeviceDecorator : public QIODevice
 {
     Q_OBJECT
 public:

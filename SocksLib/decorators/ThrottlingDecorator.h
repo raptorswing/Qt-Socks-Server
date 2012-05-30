@@ -2,13 +2,14 @@
 #define THROTTLINGDECORATOR_H
 
 #include "QIODeviceDecorator.h"
+#include "SocksLib_global.h"
 
 #include <QTimer>
 #include <QByteArray>
 #include <QTcpSocket>
 #include <QTime>
 
-class ThrottlingDecorator : public QIODeviceDecorator
+class SOCKSLIBSHARED_EXPORT ThrottlingDecorator : public QIODeviceDecorator
 {
     Q_OBJECT
 public:

@@ -22,7 +22,7 @@ ThrottlingDecorator::ThrottlingDecorator(QAbstractSocket *toDecorate, QObject *p
             SIGNAL(timeout()),
             this,
             SLOT(handleBuckets()));
-    _bucketTimer->start(50);
+    _bucketTimer->start(5);
     _lastBucketTime.start();
 
     _childIsFinished = false;

@@ -2,7 +2,8 @@ TEMPLATE = subdirs
 
 SUBDIRS += SocksLib \
     SocksServerConsole \
-    SocksServerGUI
+    SocksServerGUI \
+    Tests
 
 SocksServerConsole.depends += SocksLib
 
