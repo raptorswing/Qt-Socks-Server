@@ -2,12 +2,12 @@
 #define SOCKSSERVER_H
 
 #include <QObject>
-#include <QTcpServer>
+class QTcpServer;
 #include <QPointer>
 #include <QList>
 
 #include "SocksLib_global.h"
-#include "SocksConnection.h"
+class SocksConnection;
 
 class SOCKSLIBSHARED_EXPORT SocksServer : public QObject
 {

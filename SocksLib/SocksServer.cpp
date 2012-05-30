@@ -1,6 +1,9 @@
 #include "SocksServer.h"
 
 #include <QtDebug>
+#include <QTcpServer>
+
+#include "SocksConnection.h"
 
 SocksServer::SocksServer(QObject *parent) :
     QObject(parent)
