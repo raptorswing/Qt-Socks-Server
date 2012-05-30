@@ -6,9 +6,10 @@
 #include <QPointer>
 #include <QList>
 
+#include "SocksLib_global.h"
 #include "SocksConnection.h"
 
-class SocksServer : public QObject
+class SOCKSLIBSHARED_EXPORT SocksServer : public QObject
 {
     Q_OBJECT
 public:

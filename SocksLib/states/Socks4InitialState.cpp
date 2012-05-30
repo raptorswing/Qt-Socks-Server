@@ -26,7 +26,7 @@ void Socks4InitialState::handleIncomingBytes(QByteArray &bytes)
     else if (parseResult == SocksProtocolMessage::Failure)
     {
         //Print an error and close the connection
-        qWarning() << "Failed to parse SOCKS4 reqest. Error:" << parseErrorString;
+        qWarning() << "Failed to parse SOCKS4 request. Error:" << parseErrorString;
         _parent->close();
         return;
     }
