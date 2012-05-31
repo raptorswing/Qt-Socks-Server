@@ -45,7 +45,8 @@ HEADERS += \
     states/Socks4ConnectState.h \
     states/Socks4ConnectedState.h \
     states/InitialState.h \
-    SocksLib_global.h
+    SocksLib_global.h \
+    decorators/QTcpSocketDecorator.h
 
 SOURCES += \
     SocksSessionManager.cpp \
@@ -73,4 +74,5 @@ SOURCES += \
     states/Socks4InitialState.cpp \
     states/Socks4ConnectState.cpp \
     states/Socks4ConnectedState.cpp \
-    states/InitialState.cpp
+    states/InitialState.cpp \
+    decorators/QTcpSocketDecorator.cpp

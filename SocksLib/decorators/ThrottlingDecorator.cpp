@@ -13,8 +13,8 @@ ThrottlingDecorator::ThrottlingDecorator(QAbstractSocket *toDecorate, QObject *p
 
     _readBucket = 0;
     _writeBucket = 0;
-    this->setReadBytesPerSecond(1024*150);
-    this->setWriteBytesPerSecond(1024*150);
+    this->setReadBytesPerSecond(1024*15);
+    this->setWriteBytesPerSecond(1024*15);
 
     //This timer is what makes the throttling work
     _bucketTimer = new QTimer(this);
@@ -74,7 +74,7 @@ bool ThrottlingDecorator::waitForReadyRead(int msecs)
 void ThrottlingDecorator::setReadBytesPerSecond(qint64 maxReadBytesPerSecond)
 {
     _readBytesPerSecond = maxReadBytesPerSecond;
-    _cheaterSocketReference->setReadBufferSize(maxReadBytesPerSecond * 2);
+    _cheaterSocketReference->setReadBufferSize(maxReadBytesPerSecond * 20);
 }
 
 void ThrottlingDecorator::setWriteBytesPerSecond(qint64 maxWriteBytesPerSecond)
