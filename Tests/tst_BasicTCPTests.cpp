@@ -100,24 +100,24 @@ void BasicTCPTests::runNormalTest(int size)
 //private slot
 void BasicTCPTests::ThrottledSockTest()
 {
-    for (int i = 1; i < 10; i++)
+    for (int i = 1; i < 100; i++)
     {
         qDebug() << "#############################";
-        qDebug() << i << "MiB Test Starting";
+        qDebug() << i << "KiB Test Starting";
         qDebug() << "#############################";
-        this->runThrottledTest(i * 1024 * 1024);
+        this->runThrottledTest(i * 1024);
     }
 }
 
 //private slot
 void BasicTCPTests::NormalSockTest()
 {
-    for (int i = 1; i < 10; i++)
+    for (int i = 1; i < 100; i++)
     {
         qDebug() << "#############################";
-        qDebug() << i << "MiB Test Starting";
+        qDebug() << i << "KiB Test Starting";
         qDebug() << "#############################";
-        this->runNormalTest(i * 1024 * 1024);
+        this->runNormalTest(i * 1024);
     }
 }
 
