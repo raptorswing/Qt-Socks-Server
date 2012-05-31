@@ -3,7 +3,7 @@
 #include <QtDebug>
 
 QTcpSocketDecorator::QTcpSocketDecorator(QPointer<QTcpSocket> decorated, QObject *parent) :
-    QAbstractSocket(QAbstractSocket::UnknownSocketType,parent)
+    QTcpSocket(parent)
 {
     if (decorated.isNull())
         decorated = new QTcpSocket(this);
@@ -16,7 +16,7 @@ QTcpSocketDecorator::QTcpSocketDecorator(QPointer<QTcpSocket> decorated, QObject
 }
 
 QTcpSocketDecorator::QTcpSocketDecorator(QObject *parent) :
-    QAbstractSocket(QAbstractSocket::UnknownSocketType,parent)
+    QTcpSocket(parent)
 {
     _decorated = new QTcpSocket(this);
 
@@ -216,6 +216,7 @@ void QTcpSocketDecorator::handleDecoratedProxyAuthenticationRequired(const QNetw
 void QTcpSocketDecorator::handleDecoratedStateChanged(QAbstractSocket::SocketState state)
 {
     this->updateAddressesFromDecorated();
+    this->setOpenMode(_decorated->openMode());
     this->setSocketState(state);
     this->stateChanged(state);
 }

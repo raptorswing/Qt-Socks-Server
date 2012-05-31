@@ -83,8 +83,6 @@ void BasicTCPTests::runNormalTest(int size)
 
     QVERIFY2(timeout < 50, "Connection to test server timed out");
 
-    qDebug() << "Valid?" << rawSock->isValid();
-
     QByteArray bytes;
 
     int lastSize;

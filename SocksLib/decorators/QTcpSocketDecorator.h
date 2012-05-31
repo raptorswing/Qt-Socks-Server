@@ -7,7 +7,7 @@
 
 #include "SocksLib_global.h"
 
-class SOCKSLIBSHARED_EXPORT QTcpSocketDecorator : public QAbstractSocket
+class SOCKSLIBSHARED_EXPORT QTcpSocketDecorator : public QTcpSocket
 {
     Q_OBJECT
 public:
