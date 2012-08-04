@@ -17,7 +17,7 @@ public:
     BasicTCPTests();
 
 private:
-    void runThrottledTest(int size);
+    void runThrottledTest(int size, qreal speed = 25.0);
     void runNormalTest(int size);
     
 private Q_SLOTS:
@@ -30,13 +30,13 @@ BasicTCPTests::BasicTCPTests()
 }
 
 //private
-void BasicTCPTests::runThrottledTest(int size)
+void BasicTCPTests::runThrottledTest(int size, qreal speed)
 {
+    speed *= 1024;
     QScopedPointer<TCPTestServer> server(new TCPTestServer(size));
 
     int port = server->listenPort();
     QVERIFY2(port >= 0, "Failed to setup test server");
-    qDebug() << "Connect to port" << port;
 
     QTcpSocket * rawSock = new QTcpSocket();
     rawSock->connectToHost(QHostAddress::LocalHost,
@@ -49,7 +49,7 @@ void BasicTCPTests::runThrottledTest(int size)
     QVERIFY2(timeout < 50, "Connection to test server timed out");
 
     QByteArray bytes;
-    QScopedPointer<ThrottlingDecorator> sock(new ThrottlingDecorator(rawSock));
+    QScopedPointer<ThrottlingDecorator> sock(new ThrottlingDecorator(speed, speed, rawSock));
 
     int lastSize;
     do
@@ -59,9 +59,13 @@ void BasicTCPTests::runThrottledTest(int size)
         bytes.append(sock->readAll());
     }
     while (bytes.size() < size && sock->isReadable());
-    qDebug() << "Read" << bytes.size() << "bytes";
-    QVERIFY2(bytes.size() == size,
-             "Read incorrect number of bytes");
+
+    if (bytes.size() != size)
+    {
+        qWarning() << "Expected to read" << size << "bytes at" << speed << "bytes/second. Read" << bytes.size() << "bytes";
+        QFAIL("");
+    }
+
 }
 
 //private
@@ -71,7 +75,6 @@ void BasicTCPTests::runNormalTest(int size)
 
     int port = server->listenPort();
     QVERIFY2(port >= 0, "Failed to setup test server");
-    qDebug() << "Connect to port" << port;
 
     QAbstractSocket * rawSock = new QTcpSocketDecorator();
     rawSock->connectToHost(QHostAddress::LocalHost,
@@ -93,34 +96,46 @@ void BasicTCPTests::runNormalTest(int size)
         bytes.append(rawSock->readAll());
     }
     while (rawSock->isValid() && bytes.size() < size);
-    qDebug() << "Read" << bytes.size() << "bytes";
     QVERIFY2(bytes.size() == size,
-             "Read incorrect number of bytes");
+             "Read incorrect number of bytes.");
+
+    rawSock->deleteLater();
 }
 
 //private slot
 void BasicTCPTests::ThrottledSockTest()
-{/*
-    for (int i = 1; i < 100; i++)
+{
+    //Small Tests
+    qDebug() << "Starting small throttle tests";
+    for (int speed = 5; speed < 10; speed++)
     {
-        qDebug() << "#############################";
-        qDebug() << i << "KiB Test Starting";
-        qDebug() << "#############################";
-        this->runThrottledTest(i * 1024);
+        for (int i = 1; i < 20; i++)
+            this->runThrottledTest(i * 1024,speed);
     }
-    */
+
+    //Medium Tests
+    qDebug() << "Starting medium throttle tests";
+    for (int speed = 10; speed < 11; speed++)
+    {
+        for (int i = 50; i < 52; i++)
+            this->runThrottledTest(i * 1024,speed);
+    }
+
+    //Large Tests
+    qDebug() << "Starting large throttle tests";
+    for (int speed = 20; speed < 22; speed++)
+    {
+        for (int i = 1024; i < 1025; i++)
+            this->runThrottledTest(i * 1024,speed);
+    }
+
 }
 
 //private slot
 void BasicTCPTests::NormalSockTest()
 {
     for (int i = 1; i < 100; i++)
-    {
-        qDebug() << "#############################";
-        qDebug() << i << "KiB Test Starting";
-        qDebug() << "#############################";
         this->runNormalTest(i * 1024);
-    }
 }
 
 QTEST_MAIN(BasicTCPTests)

@@ -53,8 +53,6 @@ void TCPTestServer::generateRandomToSend(int size)
 {
     qsrand(QDateTime::currentDateTime().toTime_t() ^ qHash(QHostInfo::localHostName()));
 
-    qDebug() << "Generating" << size << "random bytes to test network";
-
     _toSend.reserve(size);
     for (int i = 0; i < size; i++)
         _toSend.append((char)(qrand() % 256));
