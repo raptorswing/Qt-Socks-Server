@@ -14,6 +14,7 @@ class SOCKSLIBSHARED_EXPORT ThrottlingDecorator : public QIODeviceDecorator
     Q_OBJECT
 public:
     explicit ThrottlingDecorator(QAbstractSocket * toDecorate, QObject *parent = 0);
+    explicit ThrottlingDecorator(qreal readBytesPerSecond, qreal writeBytesPerSecond, QAbstractSocket * toDecorate, QObject * parent = 0);
     virtual ~ThrottlingDecorator();
 
     //These are all virtual from QIODeviceDecorator
@@ -47,8 +48,10 @@ private slots:
     void handleBuckets();
     void handleWriteQueue();
     void handleReadQueue();
+    void handleMetrics();
 
 private:
+    void commonConstructor();
     QTimer * _bucketTimer;
     qint64 _readBucket;
     qint64 _writeBucket;
@@ -62,6 +65,10 @@ private:
 
     bool _childIsFinished;
     QAbstractSocket * _cheaterSocketReference;
+
+    qreal _bytesReadSinceLastMetric;
+    qreal _bytesWrittenSinceLastMetric;
+    QTime _lastMetricTime;
     
 };
 

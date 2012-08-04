@@ -11,21 +11,20 @@ ThrottlingDecorator::ThrottlingDecorator(QAbstractSocket *toDecorate, QObject *p
     */
     _cheaterSocketReference = toDecorate;
 
-    _readBucket = 0;
-    _writeBucket = 0;
-    this->setReadBytesPerSecond(1024*15);
-    this->setWriteBytesPerSecond(1024*15);
+    //The rest of the constructor code is in this method to reduce code duplication
+    this->commonConstructor();
+}
 
-    //This timer is what makes the throttling work
-    _bucketTimer = new QTimer(this);
-    connect(_bucketTimer,
-            SIGNAL(timeout()),
-            this,
-            SLOT(handleBuckets()));
-    _bucketTimer->start(5);
-    _lastBucketTime.start();
+ThrottlingDecorator::ThrottlingDecorator(qreal readBytesPerSecond, qreal writeBytesPerSecond, QAbstractSocket *toDecorate, QObject *parent) :
+    QIODeviceDecorator(toDecorate, parent)
+{
+    _cheaterSocketReference = toDecorate;
 
-    _childIsFinished = false;
+    //The rest of the constructor code is in this method to reduce code duplication
+    this->commonConstructor();
+
+    this->setReadBytesPerSecond(readBytesPerSecond);
+    this->setWriteBytesPerSecond(writeBytesPerSecond);
 }
 
 ThrottlingDecorator::~ThrottlingDecorator()
@@ -74,7 +73,7 @@ bool ThrottlingDecorator::waitForReadyRead(int msecs)
 void ThrottlingDecorator::setReadBytesPerSecond(qint64 maxReadBytesPerSecond)
 {
     _readBytesPerSecond = maxReadBytesPerSecond;
-    _cheaterSocketReference->setReadBufferSize(maxReadBytesPerSecond * 20);
+    _cheaterSocketReference->setReadBufferSize(maxReadBytesPerSecond * 3);
 }
 
 void ThrottlingDecorator::setWriteBytesPerSecond(qint64 maxWriteBytesPerSecond)
@@ -173,9 +172,9 @@ void ThrottlingDecorator::handleBuckets()
     int toAddRead = fractionOfSecond * _readBytesPerSecond;
     int toAddWrite = fractionOfSecond * _writeBytesPerSecond;
 
-    _readBucket = qMin<qint64>(toAddRead * 2,
+    _readBucket = qMin<qint64>(toAddRead,
                                _readBucket + toAddRead);
-    _writeBucket = qMin<qint64>(toAddWrite * 2,
+    _writeBucket = qMin<qint64>(toAddWrite,
                                 _writeBucket + toAddWrite);
 
     if (_readQueue.size() > 0)
@@ -209,6 +208,7 @@ void ThrottlingDecorator::handleWriteQueue()
     _toDecorate->write(toSend);
 
     _writeBucket -= numToSend;
+    _bytesWrittenSinceLastMetric += numToSend;
 }
 
 //private slot
@@ -220,5 +220,57 @@ void ThrottlingDecorator::handleReadQueue()
 
     qint64 numBytesToRead = qMin<qint64>(_readBucket, childBytesAvailable);
     _readQueue.append(_toDecorate->read(numBytesToRead));
+    _readBucket -= numBytesToRead;
+    _bytesReadSinceLastMetric += numBytesToRead;
     this->readyRead();
+}
+
+//private slot
+void ThrottlingDecorator::handleMetrics()
+{
+    int milliDiff = _lastMetricTime.restart();
+    qreal seconds = milliDiff / 1000.0;
+
+    qreal kibibytesReadPerSecond = (_bytesReadSinceLastMetric / seconds) / 1024;
+    qreal kibibytesWrittenPerSecond = (_bytesWrittenSinceLastMetric / seconds) / 1024;
+
+    _bytesReadSinceLastMetric = 0.0;
+    _bytesWrittenSinceLastMetric = 0.0;
+
+    if (kibibytesReadPerSecond < 1.0 && kibibytesWrittenPerSecond < 1.0)
+        return;
+
+    qDebug() << "Read:" << kibibytesReadPerSecond << "KiB/s. Write:" << kibibytesWrittenPerSecond << "KiB/s.";
+}
+
+//private
+void ThrottlingDecorator::commonConstructor()
+{
+    _readBucket = 0;
+    _writeBucket = 0;
+    this->setReadBytesPerSecond(1024*100);
+    this->setWriteBytesPerSecond(1024*100);
+
+    //This timer is what makes the throttling work
+    _bucketTimer = new QTimer(this);
+    connect(_bucketTimer,
+            SIGNAL(timeout()),
+            this,
+            SLOT(handleBuckets()));
+    _bucketTimer->start(40);
+    _lastBucketTime.start();
+
+    //This timer is what makes the metrics work
+    QTimer * metricTimer = new QTimer(this);
+    connect(metricTimer,
+            SIGNAL(timeout()),
+            this,
+            SLOT(handleMetrics()));
+    metricTimer->start(1000);
+    _bytesReadSinceLastMetric = 0.0;
+    _bytesWrittenSinceLastMetric = 0.0;
+    _lastMetricTime.start();
+
+
+    _childIsFinished = false;
 }
