@@ -38,6 +38,7 @@ QIODeviceDecorator::QIODeviceDecorator(QIODevice *toDecorate, QObject *parent) :
 
 QIODeviceDecorator::~QIODeviceDecorator()
 {
+    qDebug() << "QIODeviceDecorator" << this << "shutting down";
     if (_toDecorate.isNull())
         return;
     _toDecorate->close();

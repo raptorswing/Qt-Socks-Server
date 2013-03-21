@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>images/sock.ico</file>
+        <file>images/sock.png</file>
+    </qresource>
+</RCC>

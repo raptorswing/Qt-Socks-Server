@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QPointer>
+#include <QSharedPointer>
 
 #include "SocksServer.h"
 
@@ -18,9 +18,13 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     
+private slots:
+
+    void on_runButton_clicked(bool checked);
+
 private:
     Ui::MainWindow *ui;
-    QPointer<SocksServer> _server;
+    QSharedPointer<SocksServer> _server;
 };
 
 #endif // MAINWINDOW_H

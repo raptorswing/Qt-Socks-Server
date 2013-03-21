@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 TARGET = SocksServerGUI
 TEMPLATE = app
@@ -24,3 +24,8 @@ else:unix:!symbian: LIBS += -L$$OUT_PWD/../SocksLib/ -lSocksLib
 
 INCLUDEPATH += $$PWD/../SocksLib
 DEPENDPATH += $$PWD/../SocksLib
+
+RESOURCES += \
+    resources.qrc
+
+win32:RC_FILE += icon.rc

@@ -5,18 +5,31 @@
 
 #include "SocksConnection.h"
 
-SocksServer::SocksServer(QObject *parent) :
-    QObject(parent)
+SocksServer::SocksServer(QHostAddress listenAddress,
+                         quint16 listenPort,
+                         qreal throttle,
+                         QObject *parent) :
+    QObject(parent), _listenAddress(listenAddress), _listenPort(listenPort), _throttle(throttle)
 {
 }
 
 SocksServer::~SocksServer()
 {
+    qDebug() << "SocksServer" << this << "shutting down";
     if (!_serverSock.isNull())
     {
         _serverSock->close();
         _serverSock->deleteLater();
     }
+
+    foreach(QPointer<SocksConnection> conn, _connections)
+    {
+        if (conn.isNull())
+            continue;
+        conn->close();
+        conn->deleteLater();
+    }
+    _connections.clear();
 }
 
 void SocksServer::start()
@@ -24,16 +37,12 @@ void SocksServer::start()
     if (!_serverSock.isNull())
         _serverSock->deleteLater();
 
-    //TODO: Extract these parameters somewhere where they can be configured at runtime.
-    const QHostAddress listenAddress = QHostAddress::Any;
-    const quint16 listenPort = 1080;
-
     _serverSock = new QTcpServer(this);
 
-    if (!_serverSock->listen(listenAddress,listenPort))
+    if (!_serverSock->listen(_listenAddress,_listenPort))
     {
         _serverSock->deleteLater();
-        qWarning() << this << "failed to listen on" << listenAddress << listenPort;
+        qWarning() << this << "failed to listen on" << _listenAddress << _listenPort;
         return;
     }
 
@@ -43,7 +52,7 @@ void SocksServer::start()
             this,
             SLOT(handleNewIncomingConnection()));
 
-    qDebug() << "Listening on" << listenAddress << listenPort;
+    qDebug() << "Listening on" << _listenAddress << _listenPort;
 }
 
 bool SocksServer::isStarted() const

@@ -240,7 +240,7 @@ void ThrottlingDecorator::handleMetrics()
     if (kibibytesReadPerSecond < 1.0 && kibibytesWrittenPerSecond < 1.0)
         return;
 
-    qDebug() << "Read:" << kibibytesReadPerSecond << "KiB/s. Write:" << kibibytesWrittenPerSecond << "KiB/s.";
+    //qDebug() << "Read:" << kibibytesReadPerSecond << "KiB/s. Write:" << kibibytesWrittenPerSecond << "KiB/s.";
 }
 
 //private
@@ -248,8 +248,8 @@ void ThrottlingDecorator::commonConstructor()
 {
     _readBucket = 0;
     _writeBucket = 0;
-    this->setReadBytesPerSecond(1024*100);
-    this->setWriteBytesPerSecond(1024*100);
+    this->setReadBytesPerSecond(1024*500);
+    this->setWriteBytesPerSecond(1024*500);
 
     //This timer is what makes the throttling work
     _bucketTimer = new QTimer(this);
