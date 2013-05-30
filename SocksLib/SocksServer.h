@@ -30,6 +30,7 @@ public slots:
 
 private slots:
     void handleNewIncomingConnection();
+    void handleConnectionDestroyed();
 
 private:
     QHostAddress _listenAddress;

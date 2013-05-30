@@ -2,6 +2,7 @@
 
 #include <QtDebug>
 #include <QTcpServer>
+#include <QMutableListIterator>
 
 #include "SocksConnection.h"
 
@@ -71,10 +72,34 @@ void SocksServer::handleNewIncomingConnection()
     {
         QTcpSocket * clientSock = _serverSock->nextPendingConnection();
         QPointer<SocksConnection> connection = new SocksConnection(clientSock,this);
+        connect(connection,
+                SIGNAL(destroyed()),
+                this,
+                SLOT(handleConnectionDestroyed()));
         _connections.append(connection);
         //qDebug() << "Client" << clientSock->peerAddress().toString() << ":" << clientSock->peerPort() << "connected";
     }
 
     if (count == max)
         qDebug() << this << "looped too much";
+}
+
+//private slot
+void SocksServer::handleConnectionDestroyed()
+{
+    QMutableListIterator<QPointer<SocksConnection> > iter(_connections);
+
+    bool pruned = false;
+    while (iter.hasNext())
+    {
+        const QPointer<SocksConnection>& conn = iter.next();
+        if (conn.isNull())
+        {
+            iter.remove();
+            pruned = true;
+        }
+    }
+
+    if (!pruned)
+        qWarning() << "handleConnectionDestroyed called but no dead connections were found...";
 }
