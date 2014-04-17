@@ -1,5 +1,7 @@
 #include "Socks4ReplyMessage.h"
 
+#include <QDataStream>
+
 Socks4ReplyMessage::Socks4ReplyMessage(Socks4ReplyStatus status, QHostAddress address, quint16 port) :
     _status(status), _address(address), _port(port)
 {

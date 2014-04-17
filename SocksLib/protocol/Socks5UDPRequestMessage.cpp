@@ -1,5 +1,7 @@
 #include "Socks5UDPRequestMessage.h"
 
+#include <QDataStream>
+
 Socks5UDPRequestMessage::Socks5UDPRequestMessage(QHostAddress dst,
                                                  quint16 dstPort,
                                                  QByteArray data,

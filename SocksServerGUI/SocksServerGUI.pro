@@ -5,10 +5,14 @@
 #-------------------------------------------------
 
 QT       += core gui network
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+
 
 TARGET = SocksServerGUI
 TEMPLATE = app
 
+INCLUDEPATH += .
 
 SOURCES += main.cpp\
         MainWindow.cpp

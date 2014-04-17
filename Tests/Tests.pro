@@ -14,6 +14,7 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
+INCLUDEPATH += .
 
 SOURCES += tst_BasicTCPTests.cpp \
     TCPTestServer.cpp

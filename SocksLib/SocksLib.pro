@@ -18,6 +18,8 @@ unix:!symbian {
 OTHER_FILES += \
     SocksLib.pro
 
+INCLUDEPATH += .
+
 HEADERS += \
     SocksSessionManager.h \
     SocksSession.h \

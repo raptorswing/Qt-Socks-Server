@@ -1,5 +1,8 @@
 #include "Socks4RequestMessage.h"
 
+#include <QDataStream>
+#include <QString>
+
 SocksProtocolMessage::ParseResult Socks4RequestMessage::parse(QByteArray &bytes, QString *error)
 {
     if (bytes.size() < this->minimumMessageLength())
@@ -95,7 +98,7 @@ SocksProtocolMessage::ParseResult Socks4RequestMessage::parse(QByteArray &bytes,
     //Fetch the socks4a domain name
     char * domainNameBytes = new char[domainNameLength];
     stream.readRawData(domainNameBytes,domainNameLength);
-    QString domainName = QString::fromAscii(domainNameBytes,domainNameLength);
+    const QString domainName = QString::fromLatin1(domainNameBytes,domainNameLength);
     delete domainNameBytes;
 
     _domainName = domainName;
