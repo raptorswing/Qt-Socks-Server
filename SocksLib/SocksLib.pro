@@ -15,6 +15,15 @@ unix:!symbian {
 	INSTALLS += target
 }
 
+osx:{
+	# Allow directly running applications linking against this library.
+	# The path used to link the library will be absolute as can be seen when
+	# invoking 'otool -L /path/to/binary' and therefore this does NOT replace
+	# the deployment steps necessary before moving or sharing the application.
+	# See: http://doc.qt.io/qt-5/osx-deployment.html
+	QMAKE_LFLAGS_SONAME = -Wl,-install_name,$$OUT_PWD/
+}
+
 OTHER_FILES += \
     SocksLib.pro
 
