@@ -8,3 +8,5 @@ SUBDIRS += SocksLib \
 SocksServerConsole.depends += SocksLib
 
 SocksServerGUI.depends += SocksLib
+
+Tests.depends += SocksLib
