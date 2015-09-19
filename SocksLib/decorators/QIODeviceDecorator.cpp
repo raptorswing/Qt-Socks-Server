@@ -97,7 +97,7 @@ qint64 QIODeviceDecorator::pos() const
 }
 
 //virtual from QIODevice
-bool QIODeviceDecorator::reset() const
+bool QIODeviceDecorator::reset()
 {
     return _toDecorate->reset();
 }

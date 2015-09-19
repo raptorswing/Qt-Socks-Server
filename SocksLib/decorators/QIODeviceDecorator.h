@@ -22,7 +22,7 @@ public:
     virtual bool isSequential() const;
     virtual bool open(OpenMode mode);
     virtual qint64 pos() const;
-    virtual bool reset() const;
+    virtual bool reset();
     virtual bool seek(qint64 pos);
     virtual qint64 size() const;
     virtual bool waitForBytesWritten(int msecs);
