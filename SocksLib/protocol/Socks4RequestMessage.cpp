@@ -52,7 +52,7 @@ SocksProtocolMessage::ParseResult Socks4RequestMessage::parse(QByteArray &bytes,
     quint32 ipv4Bytes;
     stream >> ipv4Bytes;
     QHostAddress v4(ipv4Bytes);
-    if ((ipv4Bytes & 0x000000ff) == ipv4Bytes)
+    if (((ipv4Bytes & 0x000000ff) == ipv4Bytes) && (ipv4Bytes > 0))
         _addressType = SocksProtocolMessage::DomainName;
     else
     {
