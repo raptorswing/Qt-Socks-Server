@@ -51,10 +51,8 @@ void BasicTCPTests::runThrottledTest(int size, qreal speed)
     QByteArray bytes;
     QScopedPointer<ThrottlingDecorator> sock(new ThrottlingDecorator(speed, speed, rawSock));
 
-    int lastSize;
     do
     {
-        lastSize = bytes.size();
         QTest::qWait(50);
         bytes.append(sock->readAll());
     }
@@ -88,10 +86,8 @@ void BasicTCPTests::runNormalTest(int size)
 
     QByteArray bytes;
 
-    int lastSize;
     do
     {
-        lastSize = bytes.size();
         QTest::qWait(50);
         bytes.append(rawSock->readAll());
     }
