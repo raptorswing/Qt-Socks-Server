@@ -32,8 +32,8 @@ private:
     QString _domainName;
     SocksProtocolMessage::AddressType _addressType;
     quint16 _port;
-    quint8 _fragID;
     QByteArray _data;
+    quint8 _fragID;
 };
 
 #endif // SOCKS5UDPREQUESTMESSAGE_H
