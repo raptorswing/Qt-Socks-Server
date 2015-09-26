@@ -3,6 +3,7 @@
 #include "protocol/Socks5ReplyMessage.h"
 #include "Socks5ConnectedState.h"
 #include "decorators/ThrottlingDecorator.h"
+#include "filters/ConnectionFilter.h"
 
 Socks5ConnectState::Socks5ConnectState(QSharedPointer<Socks5RequestMessage> request, SocksConnection *parent) :
     SocksState(parent), _request(request), _socket(0)
@@ -39,9 +40,23 @@ void Socks5ConnectState::handleSetAsNewState()
     //if they gave us a domain, handle it
     if (_request->addressType() == Socks5RequestMessage::IPv4 ||
             _request->addressType() == Socks5RequestMessage::IPv6)
-        this->handleIP();
+    {
+        bool addressPortOkay = true;
+        if (!connectionFilter().isNull()) {
+            addressPortOkay = connectionFilter()->isConnectionToAddressAllowed(_request->address(),
+                                                                               _request->port());
+        }
+        this->handleIP(addressPortOkay);
+    }
     else if (_request->addressType() == Socks5RequestMessage::DomainName)
-        this->handleDomain();
+    {
+        bool domainOkay = true;
+        if (!connectionFilter().isNull()) {
+            domainOkay = connectionFilter()->isConnectionToDomainAllowed(_request->domainName(),
+                                                                         _request->port());
+        }
+        this->handleDomain(domainOkay);
+    }
     else
     {
         qWarning() << this << "got unknown address type in request:" << _request->addressType();
@@ -115,15 +130,21 @@ void Socks5ConnectState::handleDomainLookupResult(const QHostInfo &info)
     //Choose a result at random and send it to handleIP
     QHostAddress chosen = info.addresses()[qrand() % info.addresses().size()];
     _request->setAddress(chosen);
-    this->handleIP();
+
+    bool addressPortOkay = true;
+    if (!connectionFilter().isNull()) {
+        addressPortOkay = connectionFilter()->isConnectionToAddressAllowed(chosen,
+                                                                           _request->port());
+    }
+
+    this->handleIP(addressPortOkay);
 }
 
 
 //private
-void Socks5ConnectState::handleIP()
+void Socks5ConnectState::handleIP(const bool addressPortOkay)
 {
     //See if it's an address/port that we allow connection to
-    bool addressPortOkay = true;
     if (!addressPortOkay)
     {
         QSharedPointer<Socks5ReplyMessage> msg(new Socks5ReplyMessage(Socks5ReplyMessage::DisallowedByRules,
@@ -150,10 +171,9 @@ void Socks5ConnectState::handleIP()
 }
 
 //private
-void Socks5ConnectState::handleDomain()
+void Socks5ConnectState::handleDomain(const bool domainOkay)
 {
     //See if it's a domain we allow connection to
-    bool domainOkay = true;
     if (!domainOkay)
     {
         QSharedPointer<Socks5ReplyMessage> msg(new Socks5ReplyMessage(Socks5ReplyMessage::DisallowedByRules,
@@ -171,4 +191,9 @@ void Socks5ConnectState::handleDomain()
     _dnsLookupID = QHostInfo::lookupHost(_request->domainName(),
                           this,
                           SLOT(handleDomainLookupResult(QHostInfo)));
+}
+
+QPointer<ConnectionFilter> Socks5ConnectState::connectionFilter() const
+{
+    return _parent->connectionFilter();
 }

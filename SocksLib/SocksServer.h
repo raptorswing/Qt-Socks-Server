@@ -9,6 +9,7 @@
 
 #include "SocksLib_global.h"
 class SocksConnection;
+class ConnectionFilterFactory;
 
 class SOCKSLIBSHARED_EXPORT SocksServer : public QObject
 {
@@ -20,6 +21,7 @@ public:
                          QObject *parent = 0);
     ~SocksServer();
 
+    void setConnectionFilterFactory(ConnectionFilterFactory *connectionFilterFactory);
     void start();
 
     bool isStarted() const;
@@ -38,6 +40,7 @@ private:
     qreal _throttle;
     QPointer<QTcpServer> _serverSock;
     QList<QPointer<SocksConnection> > _connections;
+    QPointer<ConnectionFilterFactory> _connectionFilterFactory;
     
 };
 

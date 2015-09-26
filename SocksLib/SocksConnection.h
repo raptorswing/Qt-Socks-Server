@@ -12,6 +12,7 @@
 #include "protocol/SocksProtocolMessage.h"
 
 class SocksState;
+class ConnectionFilter;
 
 class SocksConnection : public QObject
 {
@@ -21,6 +22,9 @@ public:
     virtual ~SocksConnection();
 
     QPointer<SocksState> connectionState();
+
+    QPointer<ConnectionFilter> connectionFilter();
+    void setConnectionFilter(ConnectionFilter *connectionFilter);
 
     SocksProtocolMessage::SocksVersion socksVersion() const;
     void setSocksVersion(SocksProtocolMessage::SocksVersion);
@@ -53,7 +57,7 @@ private:
 
     bool _socksVersionSet;
     SocksProtocolMessage::SocksVersion _socksVersion;
-    
+    QPointer<ConnectionFilter> _connectionFilter;
 };
 
 #endif // SOCKSCONNECTION_H
