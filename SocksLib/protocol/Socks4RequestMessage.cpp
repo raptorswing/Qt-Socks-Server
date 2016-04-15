@@ -99,7 +99,7 @@ SocksProtocolMessage::ParseResult Socks4RequestMessage::parse(QByteArray &bytes,
     char * domainNameBytes = new char[domainNameLength];
     stream.readRawData(domainNameBytes,domainNameLength);
     const QString domainName = QString::fromLatin1(domainNameBytes,domainNameLength);
-    delete domainNameBytes;
+    delete[] domainNameBytes;
 
     _domainName = domainName;
 

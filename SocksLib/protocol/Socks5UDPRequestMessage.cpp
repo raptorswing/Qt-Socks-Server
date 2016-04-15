@@ -90,11 +90,11 @@ SocksProtocolMessage::ParseResult Socks5UDPRequestMessage::parse(QByteArray &byt
         {
             if (error)
                 *error = "Failed to read IPv6 address bytes";
-            delete ipv6buf;
+            delete[] ipv6buf;
             return Failure;
         }
         _address = QHostAddress(ipv6buf);
-        delete ipv6buf;
+        delete[] ipv6buf;
         if (_address.isNull())
         {
             if (error)
