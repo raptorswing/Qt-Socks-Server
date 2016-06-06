@@ -8,6 +8,8 @@
 #include <QTcpSocket>
 #include <QHostInfo>
 
+class ConnectionFilter;
+
 class Socks5ConnectState : public SocksState
 {
     Q_OBJECT
@@ -30,8 +32,9 @@ private slots:
     void handleDomainLookupResult(const QHostInfo& info);
 
 private:
-    void handleIP();
-    void handleDomain();
+    void handleIP(const bool addressPortOkay);
+    void handleDomain(const bool domainOkay);
+    QPointer<ConnectionFilter> connectionFilter() const;
 
     QSharedPointer<Socks5RequestMessage> _request;
     QTcpSocket * _socket;

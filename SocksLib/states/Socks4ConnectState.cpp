@@ -4,6 +4,7 @@
 #include "Socks4ConnectedState.h"
 
 #include "decorators/ThrottlingDecorator.h"
+#include "filters/ConnectionFilter.h"
 
 Socks4ConnectState::Socks4ConnectState(QSharedPointer<Socks4RequestMessage> request, SocksConnection *parent) :
     SocksState(parent), _request(request)
@@ -34,9 +35,23 @@ void Socks4ConnectState::handleSetAsNewState()
 
     //See if we got an IP or a domain request. Handle whichever it is
     if (_request->addressType() == Socks4RequestMessage::IPv4)
-        this->handleIP();
+    {
+        bool addressPortOkay = true;
+        if (!connectionFilter().isNull()) {
+            addressPortOkay = connectionFilter()->isConnectionToAddressAllowed(_request->address(),
+                                                                               _request->port());
+        }
+        this->handleIP(addressPortOkay);
+    }
     else if (_request->addressType() == Socks4RequestMessage::DomainName)
-        this->handleDomain();
+    {
+        bool domainOkay = true;
+        if (!connectionFilter().isNull()) {
+            domainOkay = connectionFilter()->isConnectionToDomainAllowed(_request->domainName(),
+                                                                         _request->port());
+        }
+        this->handleDomain(domainOkay);
+    }
     else
     {
         qWarning() << this << "received request with unsupported address type";
@@ -106,14 +121,20 @@ void Socks4ConnectState::handleDomainLookupResult(const QHostInfo &info)
     //Use one of the addresses and pass control to handleIP!
     QHostAddress result = info.addresses()[qrand() % info.addresses().size()];
     _request->setAddress(result);
-    this->handleIP();
+
+    bool addressPortOkay = true;
+    if (!connectionFilter().isNull()) {
+        addressPortOkay = connectionFilter()->isConnectionToAddressAllowed(result,
+                                                                           _request->port());
+    }
+
+    this->handleIP(addressPortOkay);
 }
 
 //private
-void Socks4ConnectState::handleIP()
+void Socks4ConnectState::handleIP(const bool addressPortOkay)
 {
     //See if it's an address/port combo that we're allowed to connect to
-    bool addressPortOkay = true;
     if (!addressPortOkay)
     {
         QSharedPointer<Socks4ReplyMessage> msg(new Socks4ReplyMessage(Socks4ReplyMessage::RejectedOrFailed,
@@ -140,11 +161,10 @@ void Socks4ConnectState::handleIP()
 }
 
 //private
-void Socks4ConnectState::handleDomain()
+void Socks4ConnectState::handleDomain(const bool domainOkay)
 {
     //See if the domain is one we're allowed to do a Connect to
-    bool isAllowed = true;
-    if (!isAllowed)
+    if (!domainOkay)
     {
         QSharedPointer<Socks4ReplyMessage> msg(new Socks4ReplyMessage(Socks4ReplyMessage::RejectedOrFailed,
                                                                       QHostAddress::Any,
@@ -161,4 +181,9 @@ void Socks4ConnectState::handleDomain()
     _dnsLookupID = QHostInfo::lookupHost(_request->domainName(),
                                          this,
                                          SLOT(handleDomainLookupResult(QHostInfo)));
+}
+
+QPointer<ConnectionFilter> Socks4ConnectState::connectionFilter() const
+{
+    return _parent->connectionFilter();
 }

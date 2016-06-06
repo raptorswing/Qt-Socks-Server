@@ -5,6 +5,7 @@
 #include <QMutableListIterator>
 
 #include "SocksConnection.h"
+#include "filters/ConnectionFilterFactory.h"
 
 SocksServer::SocksServer(QHostAddress listenAddress,
                          quint16 listenPort,
@@ -31,6 +32,13 @@ SocksServer::~SocksServer()
         conn->deleteLater();
     }
     _connections.clear();
+}
+
+void SocksServer::setConnectionFilterFactory(ConnectionFilterFactory *connectionFilterFactory)
+{
+    if (!_connectionFilterFactory.isNull())
+        delete _connectionFilterFactory;
+    _connectionFilterFactory = connectionFilterFactory;
 }
 
 void SocksServer::start()
@@ -77,6 +85,12 @@ void SocksServer::handleNewIncomingConnection()
                 this,
                 SLOT(handleConnectionDestroyed()));
         _connections.append(connection);
+        if (!_connectionFilterFactory.isNull()) {
+            ConnectionFilter *filter = _connectionFilterFactory->newConnectionFilter(
+                        clientSock->peerAddress(),
+                        clientSock->peerPort());
+            connection->setConnectionFilter(filter);
+        }
         //qDebug() << "Client" << clientSock->peerAddress().toString() << ":" << clientSock->peerPort() << "connected";
     }
 

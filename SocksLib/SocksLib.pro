@@ -36,6 +36,8 @@ HEADERS += \
     SocksConnection.h \
     decorators/ThrottlingDecorator.h \
     decorators/QIODeviceDecorator.h \
+    filters/ConnectionFilter.h \
+    filters/ConnectionFilterFactory.h \
     protocol/SocksReplyMessage4a.h \
     protocol/SocksProtocolMessage.h \
     protocol/Socks5UDPRequestMessage.h \

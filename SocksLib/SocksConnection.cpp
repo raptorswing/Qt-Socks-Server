@@ -6,6 +6,7 @@
 #include "states/InitialState.h"
 #include "decorators/QIODeviceDecorator.h"
 #include "decorators/ThrottlingDecorator.h"
+#include "filters/ConnectionFilter.h"
 
 SocksConnection::SocksConnection(QAbstractSocket *socket,QObject *parent) :
     QObject(parent)
@@ -49,11 +50,25 @@ SocksConnection::~SocksConnection()
 
     if (!_connectionState.isNull())
         delete _connectionState;
+    if (!_connectionFilter.isNull())
+        delete _connectionFilter;
 }
 
 QPointer<SocksState> SocksConnection::connectionState()
 {
     return _connectionState;
+}
+
+QPointer<ConnectionFilter> SocksConnection::connectionFilter()
+{
+    return _connectionFilter;
+}
+
+void SocksConnection::setConnectionFilter(ConnectionFilter *connectionFilter)
+{
+    if (!_connectionFilter.isNull())
+        delete _connectionFilter;
+    _connectionFilter = connectionFilter;
 }
 
 SocksProtocolMessage::SocksVersion SocksConnection::socksVersion() const
